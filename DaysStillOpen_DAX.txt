@@ -1,0 +1,21 @@
+Use Case - ServiceNow data, where each ticket has an open date and a resolved/closed date. need to find out how many tickets were in "open" state by dates.
+
+Create a Calculated Table, deriving from the ServiceNow table:
+
+ServiceNow_for_Open_Counts =
+SELECTCOLUMNS(
+  FILTER(
+    CROSSJOIN(
+      ADDCOLUMNS(
+        CALENDAR("2025-01-01", TODAY()),
+        "Still Open On", var d = [Date] - 1 RETURN DATE(YEAR(d), MONTH(d), DAY(d))
+          ),
+    'ServiceNow_Table'),
+    [Date] > [Opened On] && [Date] <= IF([Resolved_Closed_Date] = BLANK(), "2099-01-01",[Resolved_Closed_Date])
+    ),
+"Still Open On", [Still Open On],
+"Incident ID", [Incident ID], "Assignment Group", [Assignment Group], "Priority", [Priority], "State", [State]
+)
+
+Create a measure -
+Open_Count = DISTINCTCOUNT('ServiceNow_for_Open_Counts'[Incident_ID])
