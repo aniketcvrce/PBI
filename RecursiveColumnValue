@@ -1,0 +1,22 @@
+//Use Case - when you have a starting number and a date, and want to generate a series (increasing or decreasing) by a specific value / measure for the next days. like forecasting or planned burndown
+//example - have the value 1057 for 25th Apr. need to generate series for next days with a constant decreasing number (_m). 26th Apr = value of 25th Apr - m, 27th Apr = value of 26th Apr - m, 28th Apr = value of 27th Apr - m. 
+
+//Step 0 - have a predefined measure _m
+
+//Step 1 - cretae a calculated table
+
+Recursion =
+ADDCOLUMNS(
+  CALENDAR(DATE(2025,04,25), DATE(2025,12,31)),
+  "InitialValue", IF([Date] = DATE(2025,4,25), 1057, BLANK())
+)
+
+//Step 2 - create an Index column
+Index = RANKX(ALL('Recursion'), 'Recursion'[Date],, ASC)
+
+//Step 3 - create the recursive column
+Backlog =
+  VAR CurrentDate = MIN([Date])
+  VAR CurrentValue = MAX([InitialValue])
+  VAR _pv = CurrentValue - (('Recursion'[Index]-1)*[_m])
+  RETURN _pv
